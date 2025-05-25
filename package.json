@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node src/server.ts",
-   "build": "tsc",
-   "start": "node dist/server.js"
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "repository": {
     "type": "git",
@@ -22,8 +22,12 @@
   "homepage": "https://github.com/Gladchux14/bank-account#readme",
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
+    "@types/express-validator": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9",
     "@types/node": "^22.15.21",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
@@ -31,9 +35,15 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.0"
+    "mongoose": "^8.15.0",
+    "morgan": "^1.10.0"
   }
 }

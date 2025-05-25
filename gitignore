@@ -1,2 +1,8 @@
-/.env
-/node_modules
+# Dependencies
+node_modules/
+
+dist/
+
+
+# Environment variables
+.env

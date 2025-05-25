@@ -1,18 +1,21 @@
-import express from 'express';
-import connectDB from './config/database';
-import dotenv from 'dotenv';
+import app from './app';
+import { connectDatabase } from './config/database';
+import { config } from './config/environment';
 
-dotenv.config();
+const startServer = async () => {
+  try {
+    await connectDatabase();
+    
+    app.listen(config.PORT, () => {
+      console.log(`🚀 Server running on port ${config.PORT}`);
+      console.log(`📊 Health check: http://localhost:${config.PORT}/health`);
+      console.log(`🏦 Accounts API: http://localhost:${config.PORT}/api/accounts`);
+    });
+    
+  } catch (error) {
+    console.error('Finable server could not start:', error);
+    process.exit(1);
+  }
+};
 
-const app = express();
-
-connectDB();
-
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+startServer();

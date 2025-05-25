@@ -1,0 +1,109 @@
+{
+  "info": {
+    "name": "Finable API",
+    "description": "A secure banking system implementing the Protocol's requirements",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Account",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/accounts",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@example.com",
+            "phoneNumber": "+1234567890",
+            "dateOfBirth": "1990-01-01",
+            "password": "SecurePass123!",
+            "accountType": "current"
+          }
+        }
+      }
+    },
+    {
+      "name": "Get All Accounts",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/accounts",
+        "query": [
+          {
+            "key": "page",
+            "value": "1"
+          },
+          {
+            "key": "limit",
+            "value": "10"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get Account by Number",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/accounts/:accountNumber",
+        "variable": [
+          {
+            "key": "accountNumber",
+            "value": "1234567890"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Validate Account Number",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/accounts/:accountNumber/validate",
+        "variable": [
+          {
+            "key": "accountNumber",
+            "value": "1234567890"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Verify and Decrypt Data",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/accounts/:accountNumber/decrypt",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "encryptedData": "encrypted-data-here",
+            "iv": "initialization-vector-here"
+          }
+        },
+        "variable": [
+          {
+            "key": "accountNumber",
+            "value": "1234567890"
+          }
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+} 

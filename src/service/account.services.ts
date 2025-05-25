@@ -138,7 +138,26 @@ class AccountService {
     }
   }
   
+  async verifyAndDecryptData(accountNumber: string, encryptedData: string, iv: string): Promise<string> {
+    try {
+      const account = await Account.findOne({ accountNumber });
+      
+      if (!account) {
+        throw new Error('Account not found');
+      }
 
+      // Try to decrypt the data
+      try {
+        const decryptedData = decrypt(encryptedData, iv);
+        return decryptedData;
+      } catch (error) {
+        throw new Error('Invalid encrypted data or IV');
+      }
+      
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to verify and decrypt data');
+    }
+  }
   
   async deleteAccount(accountNumber: string): Promise<boolean> {
     try {

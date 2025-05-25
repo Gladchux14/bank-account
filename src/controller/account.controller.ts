@@ -211,7 +211,33 @@ class AccountController {
     }
   }
   
- 
+  async verifyAndDecryptData(req: Request, res: Response): Promise<void> {
+    try {
+      const { accountNumber } = req.params;
+      const { encryptedData, iv } = req.body;
+
+      if (!encryptedData || !iv) {
+        res.status(400).json({
+          success: false,
+          message: 'Encrypted data and IV are required'
+        });
+        return;
+      }
+
+      const result = await accountService.verifyAndDecryptData(accountNumber, encryptedData, iv);
+      
+      res.status(200).json({
+        success: true,
+        data: result
+      });
+      
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to verify and decrypt data'
+      });
+    }
+  }
   
   async deleteAccount(req: Request, res: Response): Promise<void> {
     try {

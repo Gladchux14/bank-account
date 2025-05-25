@@ -4,7 +4,7 @@ A modern, secure banking API built with security standards for financial transac
 
 ## ✨ Overview
 
-Finable provides a robust REST API for banking operations with  encryption, comprehensive validation, and secure account management. Designed to achieve high grade security requiring compliance with modern security protocols.
+Finable provides a robust REST API for banking operations with encryption, comprehensive validation, and secure account management. Designed to achieve high grade security requiring compliance with modern security protocols.
 
 ## 🔥 Key Features
 
@@ -85,9 +85,12 @@ BCRYPT_SALT_ROUNDS=12
 ## 📚 API Documentation
 
 ### Postman Collection
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/your-collection-id)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2250000081-2250000081?env%5BbaseUrl%5D=https%3A%2F%2Ffinable-account-service.onrender.com)
 
-The Postman collection includes all endpoints with example requests and responses:
+To use the Postman collection:
+1. Import the collection from `postman_collection.json`
+2. Set the environment variable `baseUrl` to `https://finable-account-service.onrender.com`
+3. All endpoints are ready to use with example requests and responses
 
 ## 🔒 Security Implementation
 

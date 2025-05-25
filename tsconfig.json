@@ -1,25 +1,20 @@
 {
   "compilerOptions": {
-    "types": ["node"],
-    "target": "ES2020",                       
-    "module": "CommonJS",                      
-    "lib": ["ES2020"],                        
-    "outDir": "./dist",                       
-    "rootDir": "./src",                        
-    "strict": true,                         
-    "esModuleInterop": true,                  
-    "moduleResolution": "node",             
-    "resolveJsonModule": true,                 
-    "skipLibCheck": true,      
-    "typeRoots": ["./node_modules/@types", "./src/types"],                
-    "forceConsistentCasingInFileNames": true,  
-    "sourceMap": true,                         
-    "declaration": true,                       
-    "baseUrl": ".",                            
+    "target": "es2018",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
-    },                          
+      "*": ["node_modules/*"]
+    }
   },
-  "include": ["src/**/*", "types/**/*" ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

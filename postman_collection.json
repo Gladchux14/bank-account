@@ -177,7 +177,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5000",
+      "value": "https://finable-account-service.onrender.com",
       "description": "Base URL for the API"
     }
   ]

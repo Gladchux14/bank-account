@@ -18,17 +18,32 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": {
-            "firstName": "John",
-            "lastName": "Doe",
-            "email": "john.doe@example.com",
-            "phoneNumber": "+1234567890",
-            "dateOfBirth": "1990-01-01",
-            "password": "SecurePass123!",
-            "accountType": "current"
-          }
+          "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phoneNumber\": \"+2348012345678\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"password\": \"SecurePass123!\",\n    \"accountType\": \"savings\"\n}"
+        },
+        "description": "Creates a new bank account with encrypted sensitive data"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phoneNumber\": \"+2348012345678\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"password\": \"SecurePass123!\",\n    \"accountType\": \"savings\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "header": [],
+          "body": "{\n    \"success\": true,\n    \"message\": \"Account created successfully\",\n    \"data\": {\n        \"_id\": \"...\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"accountNumber\": \"2250000081\",\n        \"accountType\": \"savings\",\n        \"balance\": 0,\n        \"status\": \"active\",\n        \"phoneNumber\": {\n            \"encryptedData\": \"...\",\n            \"iv\": \"...\"\n        },\n        \"dateOfBirth\": {\n            \"encryptedData\": \"...\",\n            \"iv\": \"...\"\n        },\n        \"card\": {\n            \"cardNumber\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            },\n            \"cvv\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            },\n            \"expiryDate\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            }\n        },\n        \"createdAt\": \"2024-03-25T15:36:05.942Z\",\n        \"updatedAt\": \"2024-03-25T15:36:05.942Z\"\n    }\n}"
         }
-      }
+      ]
     },
     {
       "name": "Get All Accounts",
@@ -38,14 +53,45 @@
         "query": [
           {
             "key": "page",
-            "value": "1"
+            "value": "1",
+            "description": "Page number for pagination"
           },
           {
             "key": "limit",
-            "value": "10"
+            "value": "10",
+            "description": "Number of items per page"
           }
-        ]
-      }
+        ],
+        "description": "Retrieves a paginated list of all accounts"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"accounts\": [\n            {\n                \"_id\": \"...\",\n                \"firstName\": \"John\",\n                \"lastName\": \"Doe\",\n                \"email\": \"john.doe@example.com\",\n                \"accountNumber\": \"2250000081\",\n                \"accountType\": \"savings\",\n                \"balance\": 0,\n                \"status\": \"active\",\n                \"phoneNumber\": {\n                    \"encryptedData\": \"...\",\n                    \"iv\": \"...\"\n                },\n                \"dateOfBirth\": {\n                    \"encryptedData\": \"...\",\n                    \"iv\": \"...\"\n                },\n                \"card\": {\n                    \"cardNumber\": {\n                        \"encryptedData\": \"...\",\n                        \"iv\": \"...\"\n                    },\n                    \"cvv\": {\n                        \"encryptedData\": \"...\",\n                        \"iv\": \"...\"\n                    },\n                    \"expiryDate\": {\n                        \"encryptedData\": \"...\",\n                        \"iv\": \"...\"\n                    }\n                },\n                \"createdAt\": \"2024-03-25T15:36:05.942Z\",\n                \"updatedAt\": \"2024-03-25T15:36:05.942Z\"\n            }\n        ],\n        \"total\": 1,\n        \"page\": 1,\n        \"totalPages\": 1\n    }\n}"
+        }
+      ]
     },
     {
       "name": "Get Account by Number",
@@ -55,23 +101,30 @@
         "variable": [
           {
             "key": "accountNumber",
-            "value": "1234567890"
+            "value": "2250000081",
+            "description": "10-digit account number"
           }
-        ]
-      }
-    },
-    {
-      "name": "Validate Account Number",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/accounts/:accountNumber/validate",
-        "variable": [
-          {
-            "key": "accountNumber",
-            "value": "1234567890"
-          }
-        ]
-      }
+        ],
+        "description": "Retrieves account details by account number"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/2250000081",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "2250000081"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"_id\": \"...\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"accountNumber\": \"2250000081\",\n        \"accountType\": \"savings\",\n        \"balance\": 0,\n        \"status\": \"active\",\n        \"phoneNumber\": {\n            \"encryptedData\": \"...\",\n            \"iv\": \"...\"\n        },\n        \"dateOfBirth\": {\n            \"encryptedData\": \"...\",\n            \"iv\": \"...\"\n        },\n        \"card\": {\n            \"cardNumber\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            },\n            \"cvv\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            },\n            \"expiryDate\": {\n                \"encryptedData\": \"...\",\n                \"iv\": \"...\"\n            }\n        },\n        \"createdAt\": \"2024-03-25T15:36:05.942Z\",\n        \"updatedAt\": \"2024-03-25T15:36:05.942Z\"\n    }\n}"
+        }
+      ]
     },
     {
       "name": "Verify and Decrypt Data",
@@ -86,24 +139,46 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": {
-            "encryptedData": "encrypted-data-here",
-            "iv": "initialization-vector-here"
-          }
+          "raw": "{\n    \"encryptedData\": \"encrypted-data-from-account\",\n    \"iv\": \"iv-from-account\"\n}"
         },
         "variable": [
           {
             "key": "accountNumber",
-            "value": "1234567890"
+            "value": "2250000081",
+            "description": "10-digit account number"
           }
-        ]
-      }
+        ],
+        "description": "Decrypts encrypted data from an account"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"encryptedData\": \"encrypted-data-from-account\",\n    \"iv\": \"iv-from-account\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/2250000081/decrypt",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "2250000081", "decrypt"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [],
+          "body": "{\n    \"success\": true,\n    \"data\": {\n        \"accountNumber\": \"2250000081\",\n        \"fieldType\": \"phoneNumber\",\n        \"decryptedData\": \"+2348012345678\"\n    }\n}"
+        }
+      ]
     }
   ],
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000"
+      "value": "http://localhost:5000",
+      "description": "Base URL for the API"
     }
   ]
 } 

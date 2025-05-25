@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 
-interface IEncryptedField {
+export interface IEncryptedField {
   encryptedData: string;
   iv: string;
 }
@@ -11,30 +11,14 @@ export interface ICard {
   expiryDate: IEncryptedField;
 }
 
-export interface IAccount extends Document {
-  firstName: string;
-  lastName: string;
-  email: string;
-  dateOfBirth: IEncryptedField;
-  password: string;
-  accountNumber: string;
-  accountType: 'current' | 'savings' | 'fixed deposit';
-  balance: number;
-  status: 'active' | 'suspended' | 'closed';
-  phoneNumber: IEncryptedField;
-  card?: ICard;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface IAccountCreate {
   firstName: string;
   lastName: string;
   email: string;
-  dateOfBirth: Date;
+  dateOfBirth: string;
   password: string;
-  accountType: 'current' | 'savings' | 'fixed deposit';
   phoneNumber: string;
+  accountType: 'savings' | 'current' | 'fixed deposit';
 }
 
 export interface IAccountResponse {
@@ -43,16 +27,21 @@ export interface IAccountResponse {
   lastName: string;
   email: string;
   accountNumber: string;
-  accountType: string;
+  accountType: 'savings' | 'current' | 'fixed deposit';
   balance: number;
-  status: string;
-  phoneNumber: string;  // Masked version
-  dateOfBirth: string;  // Decrypted version
+  status: 'active' | 'suspended' | 'closed';
+  phoneNumber: IEncryptedField;
+  dateOfBirth: IEncryptedField;
   card?: {
-    cardNumber: string;  // Masked version
-    cvv: string;        // Always "***"
-    expiryDate: string; // Decrypted version
+    cardNumber: IEncryptedField;
+    cvv: IEncryptedField;
+    expiryDate: IEncryptedField;
   };
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IAccount extends Omit<IAccountResponse, '_id'> {
+  _id?: string;
+  password: string;
 }

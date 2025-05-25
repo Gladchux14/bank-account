@@ -1,5 +1,6 @@
 import Account from '../models/account.model';
-import { IAccount, IAccountCreate, IAccountResponse } from '../interface/Account';
+import { IAccount, IAccountCreate, IAccountResponse, IEncryptedField } from '../interface/Account';
+import { ICard } from '../interface/Card';
 import bcrypt from 'bcryptjs';
 import { validateAccountNumber } from '../utils/accountNumber.utils';
 import { decrypt } from '../utils/card.utils';
@@ -8,19 +9,18 @@ class AccountService {
   
   async createAccount(accountData: IAccountCreate): Promise<IAccountResponse> {
     try {
-      // Hash password before saving
+   
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(accountData.password, saltRounds);
       
-      // Create new account
+
       const newAccount = new Account({
         ...accountData,
         password: hashedPassword
       });
       
       const savedAccount = await newAccount.save();
-      
-      // Return account without password
+   
       return this.formatAccountResponse(savedAccount);
       
     } catch (error: any) {
@@ -40,16 +40,6 @@ class AccountService {
       }
       
       return this.formatAccountResponse(account);
-      
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch account');
-    }
-  }
-  
-  async getAccountByEmail(email: string): Promise<IAccount | null> {
-    try {
-      const account = await Account.findOne({ email }).select('+password');
-      return account;
       
     } catch (error: any) {
       throw new Error(error.message || 'Failed to fetch account');
@@ -86,59 +76,10 @@ class AccountService {
     }
   }
   
-  async updateAccountStatus(
-    accountNumber: string, 
-    status: 'active' | 'suspended' | 'closed'
-  ): Promise<IAccountResponse | null> {
-    try {
-      const updatedAccount = await Account.findOneAndUpdate(
-        { accountNumber },
-        { status },
-        { new: true, runValidators: true }
-      );
-      
-      if (!updatedAccount) {
-        return null;
-      }
-      
-      return this.formatAccountResponse(updatedAccount);
-      
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to update account status');
-    }
-  }
-  
-  async updateBalance(accountNumber: string, amount: number): Promise<IAccountResponse | null> {
-    try {
-      const account = await Account.findOne({ accountNumber });
-      
-      if (!account) {
-        return null;
-      }
-      
-      if (account.balance + amount < 0) {
-        throw new Error('Insufficient balance');
-      }
-      
-      account.balance += amount;
-      const updatedAccount = await account.save();
-      
-      return this.formatAccountResponse(updatedAccount);
-      
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to update balance');
-    }
-  }
-  
-  async validateAccountNumber(accountNumber: string): Promise<boolean> {
-    try {
-      return validateAccountNumber(accountNumber);
-    } catch (error) {
-      return false;
-    }
-  }
-  
-  async verifyAndDecryptData(accountNumber: string, encryptedData: string, iv: string): Promise<string> {
+  async verifyAndDecryptData(accountNumber: string, encryptedData: string, iv: string): Promise<{
+    decryptedData: string;
+    fieldType: 'phoneNumber' | 'dateOfBirth' | 'cardNumber' | 'cvv' | 'expiryDate';
+  }> {
     try {
       const account = await Account.findOne({ accountNumber });
       
@@ -146,10 +87,44 @@ class AccountService {
         throw new Error('Account not found');
       }
 
-      // Try to decrypt the data
+ 
       try {
         const decryptedData = decrypt(encryptedData, iv);
-        return decryptedData;
+        
+     
+        let fieldType: 'phoneNumber' | 'dateOfBirth' | 'cardNumber' | 'cvv' | 'expiryDate' = 'phoneNumber';
+  
+        const phoneNumber = account.phoneNumber as IEncryptedField;
+        if (phoneNumber?.encryptedData === encryptedData && phoneNumber?.iv === iv) {
+          fieldType = 'phoneNumber';
+        }
+        
+        else if (account.dateOfBirth && typeof account.dateOfBirth === 'object' && 'encryptedData' in account.dateOfBirth) {
+          const dob = account.dateOfBirth as IEncryptedField;
+          if (dob.encryptedData === encryptedData && dob.iv === iv) {
+            fieldType = 'dateOfBirth';
+          }
+        }
+     
+        else if (account.card) {
+          const card = account.card as ICard;
+          if (card.cardNumber.encryptedData === encryptedData && card.cardNumber.iv === iv) {
+            fieldType = 'cardNumber';
+          } else if (card.cvv.encryptedData === encryptedData && card.cvv.iv === iv) {
+            fieldType = 'cvv';
+          } else if (card.expiryDate.encryptedData === encryptedData && card.expiryDate.iv === iv) {
+            fieldType = 'expiryDate';
+          } else {
+            throw new Error('Encrypted data does not match any field in the account');
+          }
+        } else {
+          throw new Error('Encrypted data does not match any field in the account');
+        }
+
+        return {
+          decryptedData,
+          fieldType
+        };
       } catch (error) {
         throw new Error('Invalid encrypted data or IV');
       }
@@ -159,31 +134,49 @@ class AccountService {
     }
   }
   
-  async deleteAccount(accountNumber: string): Promise<boolean> {
+  async updateAccountCard(accountNumber: string, card: ICard): Promise<IAccountResponse> {
     try {
-      const deletedAccount = await Account.findOneAndDelete({ accountNumber });
-      return !!deletedAccount;
-      
+      const account = await Account.findOneAndUpdate(
+        { accountNumber },
+        { $set: { card } },
+        { new: true }
+      );
+
+      if (!account) {
+        throw new Error('Account not found');
+      }
+
+      return this.formatAccountResponse(account);
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete account');
+      throw new Error(error.message || 'Failed to update account card');
     }
   }
   
   private formatAccountResponse(account: IAccount): IAccountResponse {
-    return {
-      _id: account._id?.toString() || '',
-      firstName: account.firstName,
-      lastName: account.lastName,
-      email: account.email,
-      accountNumber: account.accountNumber,
-      accountType: account.accountType,
-      balance: account.balance,
-      status: account.status,
-      phoneNumber: decrypt(account.phoneNumber.encryptedData, account.phoneNumber.iv).replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-      dateOfBirth: new Date(decrypt(account.dateOfBirth.encryptedData, account.dateOfBirth.iv)).toISOString(),
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt
-    };
+    try {
+      return {
+        _id: account._id?.toString() || '',
+        firstName: account.firstName,
+        lastName: account.lastName,
+        email: account.email,
+        accountNumber: account.accountNumber,
+        accountType: account.accountType,
+        balance: account.balance,
+        status: account.status,
+        phoneNumber: account.phoneNumber as IEncryptedField,
+        dateOfBirth: account.dateOfBirth as IEncryptedField,
+        card: account.card ? {
+          cardNumber: account.card.cardNumber,
+          cvv: account.card.cvv,
+          expiryDate: account.card.expiryDate
+        } : undefined,
+        createdAt: account.createdAt,
+        updatedAt: account.updatedAt
+      };
+    } catch (error) {
+      console.error('Error formatting account response:', error);
+      throw new Error('Failed to format account response');
+    }
   }
 }
 

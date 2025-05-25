@@ -45,12 +45,12 @@ app.get('/health', (req, res) => {
 });
 
 
-app.use('*', (req, res) => {
+app.all('/{*any}', (req, res, next) => {
   res.status(404).json({
     success: false,
     message: 'Ouch! Route not found'
   });
-});
+})
 
 
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

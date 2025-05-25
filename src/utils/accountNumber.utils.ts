@@ -44,7 +44,7 @@ export const validateAccountNumber = (accountNumber: string): boolean => {
   return calculateLuhnCheckDigit(baseNumber) === checkDigit;
 };
 
-// Helper function
+
 function calculateLuhnCheckDigit(number: string): string {
   const digits = number.split('').map(Number);
   let sum = 0;

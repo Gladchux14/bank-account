@@ -1,20 +1,17 @@
 import { Router } from 'express';
 import accountController from '../controller/account.controller';
-import { validateAccountCreation, validateAccountNumber } from '../middleware/accountValidation';
+import { validateAccountNumber, validateAccountCreation } from '../middleware/accountValidation';
 
 const router = Router();
 
-// Create new account
+// Create finable account
 router.post('/', validateAccountCreation, accountController.createAccount);
 
-// Get all accounts with pagination
-router.get('/', accountController.getAllAccounts);
-
-// Get account by account number
+// Get a particular account by number
 router.get('/:accountNumber', validateAccountNumber, accountController.getAccount);
 
-// Validate account number format
-router.get('/:accountNumber/validate', validateAccountNumber, accountController.validateAccountNumber);
+// Get all accounts listing
+router.get('/', accountController.getAllAccounts);
 
 // Verify and decrypt data
 router.post('/:accountNumber/decrypt', validateAccountNumber, accountController.verifyAndDecryptData);

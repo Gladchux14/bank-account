@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { IAccount } from '../interface/Account';
+import { IAccount, IAccountCreate, IAccountResponse, IEncryptedField } from '../interface/Account';
 import { generateAccountNumber } from '../utils/accountNumber.utils';
 import { generateCardDetails, encrypt, decrypt } from '../utils/card.utils';
 
@@ -35,8 +35,41 @@ const AccountSchema = new Schema<IAccount>(
     },
 
     dateOfBirth: {
-      encryptedData: { type: String, required: true },
-      iv: { type: String, required: true }
+      type: Object,
+      required: [true, 'Date of birth is required'],
+      validate: {
+        validator: function(dob: any) {
+          try {
+            let dateToValidate: string;
+            
+            // If it's already encrypted, decrypt it
+            if (dob && typeof dob === 'object' && 'encryptedData' in dob && 'iv' in dob) {
+              dateToValidate = decrypt(dob.encryptedData, dob.iv);
+            } else {
+              // If it's a plain string, use it directly
+              dateToValidate = dob;
+            }
+
+            const birthDate = new Date(dateToValidate);
+            if (isNaN(birthDate.getTime())) {
+              return false;
+            }
+
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+            
+            return age >= 18 && age <= 120;
+          } catch (error) {
+            return false;
+          }
+        },
+        message: 'Account holder must be between 18 and 120 years old'
+      }
     },
 
     password: {
@@ -73,87 +106,97 @@ const AccountSchema = new Schema<IAccount>(
     },
 
     phoneNumber: {
-      encryptedData: { type: String, required: true },
-      iv: { type: String, required: true }
+      type: Object,
+      required: [true, 'Phone number is required'],
+      validate: {
+        validator: function(phone: any) {
+          try {
+            let phoneToValidate: string;
+            
+            // If it's already encrypted, decrypt it
+            if (phone && typeof phone === 'object' && 'encryptedData' in phone && 'iv' in phone) {
+              phoneToValidate = decrypt(phone.encryptedData, phone.iv);
+            } else {
+              // If it's a plain string, use it directly
+              phoneToValidate = phone;
+            }
+
+            return /^\+[1-9]\d{1,14}$/.test(phoneToValidate);
+          } catch (error) {
+            return false;
+          }
+        },
+        message: 'Please provide a valid phone number in international format (e.g., +2348012345678)'
+      }
     },
 
     card: {
-      cardNumber: {
-        encryptedData: { type: String, required: true },
-        iv: { type: String, required: true }
-      },
-      cvv: {
-        encryptedData: { type: String, required: true },
-        iv: { type: String, required: true }
-      },
-      expiryDate: {
-        encryptedData: { type: String, required: true },
-        iv: { type: String, required: true }
-      }
+      type: Object,
+      default: undefined
     }
   },
   {
     timestamps: true,
     toJSON: { 
-      transform: function(doc, ret) {
+      transform: function(doc, ret): IAccountResponse {
         delete ret.password;
         
-        // Decrypt and mask phone number
-        if (doc.phoneNumber) {
-          const decryptedPhone = decrypt(doc.phoneNumber.encryptedData, doc.phoneNumber.iv);
-          ret.phoneNumber = decryptedPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+        try {
+        
+          if (doc.phoneNumber) {
+            const phoneNumber = doc.phoneNumber as IEncryptedField;
+            if (phoneNumber.encryptedData && phoneNumber.iv) {
+              ret.phoneNumber = {
+                encryptedData: phoneNumber.encryptedData,
+                iv: phoneNumber.iv
+              };
+            }
+          }
+    
+          if (doc.dateOfBirth) {
+            const dateOfBirth = doc.dateOfBirth as IEncryptedField;
+            if (dateOfBirth.encryptedData && dateOfBirth.iv) {
+              ret.dateOfBirth = {
+                encryptedData: dateOfBirth.encryptedData,
+                iv: dateOfBirth.iv
+              };
+            }
+          }
+        
+          if (doc.card) {
+            ret.card = {
+              cardNumber: {
+                encryptedData: doc.card.cardNumber.encryptedData,
+                iv: doc.card.cardNumber.iv
+              },
+              cvv: {
+                encryptedData: doc.card.cvv.encryptedData,
+                iv: doc.card.cvv.iv
+              },
+              expiryDate: {
+                encryptedData: doc.card.expiryDate.encryptedData,
+                iv: doc.card.expiryDate.iv
+              }
+            };
+          }
+        } catch (error) {
+          console.error('Error in toJSON transform:', error);
         }
         
-        // Decrypt date of birth
-        if (doc.dateOfBirth) {
-          const decryptedDate = decrypt(doc.dateOfBirth.encryptedData, doc.dateOfBirth.iv);
-          ret.dateOfBirth = new Date(decryptedDate).toISOString();
-        }
-        
-        // Handle card details
-        if (ret.card && doc.card) {
-          const cardNumber = decrypt(doc.card.cardNumber.encryptedData, doc.card.cardNumber.iv);
-          ret.card = {
-            cardNumber: '**** **** **** ' + cardNumber.slice(-4),
-            cvv: '***',
-            expiryDate: decrypt(doc.card.expiryDate.encryptedData, doc.card.expiryDate.iv)
-          };
-        }
-        return ret;
+        return ret as IAccountResponse;
       }
     }
   }
 );
 
-// Indexes
-AccountSchema.index({ accountNumber: 1 });
-AccountSchema.index({ email: 1 });
-AccountSchema.index({ accountType: 1 });
 
-// Pre-save middleware
-AccountSchema.pre('save', async function(next) {
+AccountSchema.pre('validate', async function(next) {
   if (this.isNew) {
     try {
-      // Generate account number if not exists
+    
       if (!this.accountNumber) {
         this.accountNumber = await generateAccountNumber(this.accountType);
       }
-      
-      // Get raw values before encryption
-      const rawPhone = (this.get('phoneNumber') as unknown) as string;
-      const rawDateOfBirth = (this.get('dateOfBirth') as unknown) as Date;
-      
-      // Encrypt sensitive data
-      this.set('phoneNumber', encrypt(rawPhone));
-      this.set('dateOfBirth', encrypt(rawDateOfBirth.toISOString()));
-      
-      // Generate and encrypt card details
-      const cardDetails = generateCardDetails();
-      this.card = {
-        cardNumber: encrypt(cardDetails.cardNumber),
-        cvv: encrypt(cardDetails.cvv),
-        expiryDate: encrypt(cardDetails.expiryDate)
-      };
     } catch (error) {
       return next(error as Error);
     }
@@ -161,21 +204,63 @@ AccountSchema.pre('save', async function(next) {
   next();
 });
 
-// Pre-validate middleware
-AccountSchema.pre('validate', function(next) {
-  const rawPhone = (this as any).phoneNumber;
-  if (rawPhone && !/^\+?[\d\s-()]{10,15}$/.test(rawPhone)) {
-    this.invalidate('phoneNumber', 'Please provide a valid phone number');
-  }
-  
-  const rawDob = (this as any).dateOfBirth;
-  if (rawDob) {
-    const age = new Date().getFullYear() - new Date(rawDob).getFullYear();
-    if (age < 18 || age > 120) {
-      this.invalidate('dateOfBirth', 'Account holder must be between 18 and 120 years old');
+
+AccountSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      console.log('Pre-save middleware - New document');
+
+      const rawPhone = this.get('phoneNumber');
+      const rawDateOfBirth = this.get('dateOfBirth');
+      
+      console.log('Raw values:', { rawPhone, rawDateOfBirth });
+      
+   
+      if (typeof rawPhone === 'string') {
+        console.log('Encrypting phone number');
+        const encryptedPhone = encrypt(rawPhone);
+        if (!encryptedPhone || !encryptedPhone.encryptedData || !encryptedPhone.iv) {
+          throw new Error('Failed to encrypt phone number');
+        }
+        this.set('phoneNumber', encryptedPhone);
+      }
+
+      if (typeof rawDateOfBirth === 'string') {
+        console.log('Encrypting date of birth');
+        const encryptedDob = encrypt(rawDateOfBirth);
+        if (!encryptedDob || !encryptedDob.encryptedData || !encryptedDob.iv) {
+          throw new Error('Failed to encrypt date of birth');
+        }
+        this.set('dateOfBirth', encryptedDob);
+      }
+      
+
+      console.log('Generating card details');
+      const cardDetails = generateCardDetails();
+      console.log('Raw card details:', cardDetails);
+      
+      const encryptedCard = {
+        cardNumber: encrypt(cardDetails.cardNumber),
+        cvv: encrypt(cardDetails.cvv),
+        expiryDate: encrypt(cardDetails.expiryDate)
+      };
+
+    
+      if (!encryptedCard.cardNumber?.encryptedData || !encryptedCard.cardNumber?.iv ||
+          !encryptedCard.cvv?.encryptedData || !encryptedCard.cvv?.iv ||
+          !encryptedCard.expiryDate?.encryptedData || !encryptedCard.expiryDate?.iv) {
+        throw new Error('Failed to encrypt card details');
+      }
+      
+      console.log('Encrypted card details:', encryptedCard);
+      this.set('card', encryptedCard);
+      
+      console.log('Final document before save:', this.toObject());
+    } catch (error) {
+      console.error('Error in pre-save middleware:', error);
+      return next(error as Error);
     }
   }
-  
   next();
 });
 

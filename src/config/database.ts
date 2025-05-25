@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:5000/finable';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/finable';
     
     await mongoose.connect(mongoUri, {
     
@@ -10,7 +10,6 @@ export const connectDatabase = async (): Promise<void> => {
     
     console.log('✅ yah! Database connected successfully');
     
-
     mongoose.connection.on('error', (error) => {
       console.error('❌ Database connection error:', error);
     });

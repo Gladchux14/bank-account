@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import axios from 'axios';
+import cron from 'node-cron';
+import { config } from './config/environment';
 import accountRoutes from './route/account.route';
 
 const app = express();
@@ -43,6 +46,37 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to Finable Banking API',
+    documentation: 'https://app.getpostman.com/run-collection/2250000081-2250000081',
+    endpoints: {
+      accounts: '/api/accounts',
+      health: '/health'
+    }
+  });
+});
+
+
+// Self-pinging function
+const startPinging = () => {
+  // Use the Render-provided URL or fallback to localhost for development
+  const appUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL|| `http://localhost:${config.PORT}`;
+  
+  // Schedule ping every 10 seconds
+  cron.schedule('*/10 * * * *', async () => {
+    try {
+      const response = await axios.get(`${appUrl}/health`);
+      console.log(`Ping successful at ${new Date().toISOString()}: ${response.status}`);
+    } catch (error:any) {
+      console.error(`Ping failed at ${new Date().toISOString()}: ${error.message}`);
+    }
+  });
+};
+
 
 
 app.all('/{*any}', (req, res, next) => {

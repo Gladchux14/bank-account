@@ -85,7 +85,7 @@ BCRYPT_SALT_ROUNDS=12
 ## 📚 API Documentation
 
 ### Postman Collection
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2250000081-2250000081?env%5BbaseUrl%5D=https%3A%2F%2Ffinable-account-service.onrender.com)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/36472085/2sB2qcE2CU)
 
 To use the Postman collection:
 1. Import the collection from `postman_collection.json`

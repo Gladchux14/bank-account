@@ -52,7 +52,7 @@ app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Welcome to Finable Banking API',
-    documentation: 'https://app.getpostman.com/run-collection/2250000081-2250000081',
+    documentation: 'https://documenter.getpostman.com/view/36472085/2sB2qcE2CU',
     endpoints: {
       accounts: '/api/accounts',
       health: '/health'
